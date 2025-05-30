@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 import pandas as pd
+import json
 
 # 페이지 설정
 st.set_page_config(
@@ -121,59 +122,57 @@ with tab_tone:
             with st.spinner("문장을 분석하고 있습니다..."):
                 # 분석 프롬프트 구성
                 prompt = f"""
-                다음 문장의 어투와 감정 톤을 분석해줘.
+                다음 문장의 어투와 감정 톤을 분석해서 JSON 형식으로 응답해주세요.
 
-                문장: "{tone_input}"
+                분석할 문장: "{tone_input}"
 
-                분석 항목:
-                - 감정 톤 (예: 따뜻함, 차가움, 무관심, 걱정, 분노 등)
-                - 공감 가능성 (높음, 보통, 낮음 중 선택)
-                - 어투 (예: 공손함, 딱딱함, 부드러움, 직설적 등)
-
-                각 항목에 대해 간단한 평가 이유도 함께 알려줘.
-
-                결과는 다음과 같은 JSON 형식으로 출력해줘:
+                다음 형식으로 응답해주세요:
                 {{
-                    "감정_톤": {{
-                        "평가": "분석된 감정",
-                        "이유": "평가 이유"
+                    "emotional_tone": {{
+                        "rating": "분석된 감정",
+                        "reason": "평가 이유"
                     }},
-                    "공감_가능성": {{
-                        "평가": "높음/보통/낮음",
-                        "이유": "평가 이유"
+                    "empathy_possibility": {{
+                        "rating": "높음/보통/낮음",
+                        "reason": "평가 이유"
                     }},
-                    "어투": {{
-                        "평가": "분석된 어투",
-                        "이유": "평가 이유"
+                    "tone": {{
+                        "rating": "분석된 어투",
+                        "reason": "평가 이유"
                     }},
-                    "요약": "전체 분석을 한 문장으로 요약"
+                    "summary": "전체 분석을 한 문장으로 요약"
                 }}
+
+                응답은 반드시 위 JSON 형식을 정확히 따라야 하며, 다른 텍스트는 포함하지 마세요.
                 """
 
                 response = model.generate_content(prompt)
                 
                 try:
-                    analysis = eval(response.text)
+                    # JSON 문자열에서 불필요한 공백과 줄바꿈 제거
+                    cleaned_response = response.text.strip()
+                    analysis = json.loads(cleaned_response)
                     
                     df = pd.DataFrame({
                         "분석 항목": ["감정 톤", "공감 가능성", "어투"],
                         "평가": [
-                            analysis["감정_톤"]["평가"],
-                            analysis["공감_가능성"]["평가"],
-                            analysis["어투"]["평가"]
+                            analysis["emotional_tone"]["rating"],
+                            analysis["empathy_possibility"]["rating"],
+                            analysis["tone"]["rating"]
                         ],
                         "평가 이유": [
-                            analysis["감정_톤"]["이유"],
-                            analysis["공감_가능성"]["이유"],
-                            analysis["어투"]["이유"]
+                            analysis["emotional_tone"]["reason"],
+                            analysis["empathy_possibility"]["reason"],
+                            analysis["tone"]["reason"]
                         ]
                     })
                     
                     st.table(df)
-                    st.success(analysis["요약"])
+                    st.success(analysis["summary"])
                     
-                except Exception as e:
-                    st.error("분석 결과 처리 중 오류가 발생했습니다. 다시 시도해주세요.")
+                except json.JSONDecodeError as e:
+                    st.error(f"응답 형식이 올바르지 않습니다. 다시 시도해주세요. 오류: {str(e)}")
+                    st.code(cleaned_response, language="json")
                     
         except Exception as e:
             st.error(f"분석 중 오류가 발생했습니다: {str(e)}")
@@ -204,35 +203,34 @@ with tab_praise:
         try:
             with st.spinner("따뜻한 메시지를 생성하고 있습니다..."):
                 prompt = f"""
-                상대방이 아래와 같은 말을 했을 때, 자연스럽게 이어지는 다음 두 가지 문장을 각각 만들어줘:
+                상대방이 보낸 다음 메시지에 대해 칭찬과 공감 메시지를 JSON 형식으로 생성해주세요.
 
-                1. 해당 문장에 어울리는 칭찬 한 문장
-                2. 해당 문장에 어울리는 공감 한 문장
+                메시지: "{praise_input}"
 
-                문장: "{praise_input}"
-
-                조건:
-                - 너무 과하거나 과장된 표현은 피하고, 일상적인 대화에서 자연스럽게 들리도록 해줘.
-                - 문장은 1~2줄 이내로 간결하게 작성해줘.
-
-                결과는 다음과 같은 JSON 형식으로 출력해줘:
+                다음 형식으로 응답해주세요:
                 {{
-                    "칭찬": "칭찬 메시지",
-                    "공감": "공감 메시지"
+                    "praise": "칭찬 메시지 (1-2줄)",
+                    "empathy": "공감 메시지 (1-2줄)"
                 }}
+
+                응답은 반드시 위 JSON 형식을 정확히 따라야 하며, 다른 텍스트는 포함하지 마세요.
+                메시지는 자연스럽고 일상적인 대화체로 작성해주세요.
                 """
 
                 response = model.generate_content(prompt)
                 
                 try:
-                    messages = eval(response.text)
+                    # JSON 문자열에서 불필요한 공백과 줄바꿈 제거
+                    cleaned_response = response.text.strip()
+                    messages = json.loads(cleaned_response)
                     
                     st.divider()
-                    st.success(f"💖 {messages['칭찬']}")
-                    st.info(f"🌿 {messages['공감']}")
+                    st.success(f"💖 {messages['praise']}")
+                    st.info(f"🌿 {messages['empathy']}")
                     
-                except Exception as e:
-                    st.error("메시지 생성 결과 처리 중 오류가 발생했습니다. 다시 시도해주세요.")
+                except json.JSONDecodeError as e:
+                    st.error(f"응답 형식이 올바르지 않습니다. 다시 시도해주세요. 오류: {str(e)}")
+                    st.code(cleaned_response, language="json")
                     
         except Exception as e:
             st.error(f"메시지 생성 중 오류가 발생했습니다: {str(e)}")
