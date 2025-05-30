@@ -243,8 +243,24 @@ with tab_praise:
                     messages = json.loads(cleaned_response)
                     
                     st.divider()
+                    
+                    # 칭찬 메시지 섹션
+                    st.subheader("✨ 칭찬 메시지", divider="rainbow")
                     st.success(f"💖 {messages['praise']}")
+                    st.code(messages['praise'], language=None)
+                    
+                    # 공감 메시지 섹션
+                    st.subheader("💝 공감 메시지", divider="rainbow")
                     st.info(f"🌿 {messages['empathy']}")
+                    st.code(messages['empathy'], language=None)
+                    
+                    # 사용 팁 추가
+                    with st.expander("💡 사용 팁"):
+                        st.markdown("""
+                        - 각 메시지 박스의 오른쪽 상단에 있는 복사 버튼을 클릭하여 텍스트를 복사할 수 있습니다.
+                        - 상황에 맞게 칭찬 또는 공감 메시지를 선택하여 사용하세요.
+                        - 필요한 경우 메시지를 약간 수정하여 사용하셔도 좋습니다.
+                        """)
                     
                 except json.JSONDecodeError as e:
                     st.error(f"응답 형식이 올바르지 않습니다. 다시 시도해주세요. 오류: {str(e)}")
