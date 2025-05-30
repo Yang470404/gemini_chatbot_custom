@@ -121,12 +121,12 @@ with tab_tone:
         try:
             with st.spinner("문장을 분석하고 있습니다..."):
                 # 분석 프롬프트 구성
-                prompt = f"""
-                다음 문장의 어투와 감정 톤을 분석해서 JSON 형식으로 응답해주세요.
+                prompt = f"""당신은 JSON 응답만 제공하는 분석 시스템입니다.
+                입력된 문장의 어투와 감정 톤을 분석하여 정확한 JSON 형식으로만 응답하세요.
 
                 분석할 문장: "{tone_input}"
 
-                다음 형식으로 응답해주세요:
+                아래 형식의 JSON으로만 응답하세요:
                 {{
                     "emotional_tone": {{
                         "rating": "분석된 감정",
@@ -141,16 +141,23 @@ with tab_tone:
                         "reason": "평가 이유"
                     }},
                     "summary": "전체 분석을 한 문장으로 요약"
-                }}
+                }}"""
 
-                응답은 반드시 위 JSON 형식을 정확히 따라야 하며, 다른 텍스트는 포함하지 마세요.
-                """
-
-                response = model.generate_content(prompt)
+                response = model.generate_content(prompt, generation_config={
+                    "temperature": 0.3,
+                    "top_p": 0.8,
+                    "top_k": 40
+                })
                 
                 try:
-                    # JSON 문자열에서 불필요한 공백과 줄바꿈 제거
+                    # 응답 전처리
                     cleaned_response = response.text.strip()
+                    # 응답에서 JSON 부분만 추출
+                    if "```json" in cleaned_response:
+                        cleaned_response = cleaned_response.split("```json")[1].split("```")[0].strip()
+                    elif "```" in cleaned_response:
+                        cleaned_response = cleaned_response.split("```")[1].strip()
+                    
                     analysis = json.loads(cleaned_response)
                     
                     df = pd.DataFrame({
@@ -202,26 +209,37 @@ with tab_praise:
     if generate_button and praise_input:
         try:
             with st.spinner("따뜻한 메시지를 생성하고 있습니다..."):
-                prompt = f"""
-                상대방이 보낸 다음 메시지에 대해 칭찬과 공감 메시지를 JSON 형식으로 생성해주세요.
+                prompt = f"""당신은 JSON 응답만 제공하는 메시지 생성 시스템입니다.
+                입력된 메시지에 대한 칭찬과 공감 메시지를 생성하여 정확한 JSON 형식으로만 응답하세요.
 
-                메시지: "{praise_input}"
+                입력 메시지: "{praise_input}"
 
-                다음 형식으로 응답해주세요:
+                아래 형식의 JSON으로만 응답하세요:
                 {{
                     "praise": "칭찬 메시지 (1-2줄)",
                     "empathy": "공감 메시지 (1-2줄)"
                 }}
 
-                응답은 반드시 위 JSON 형식을 정확히 따라야 하며, 다른 텍스트는 포함하지 마세요.
-                메시지는 자연스럽고 일상적인 대화체로 작성해주세요.
-                """
+                규칙:
+                1. JSON 형식만 응답하세요
+                2. 자연스러운 대화체로 작성하세요
+                3. 다른 설명이나 텍스트를 포함하지 마세요"""
 
-                response = model.generate_content(prompt)
+                response = model.generate_content(prompt, generation_config={
+                    "temperature": 0.3,
+                    "top_p": 0.8,
+                    "top_k": 40
+                })
                 
                 try:
-                    # JSON 문자열에서 불필요한 공백과 줄바꿈 제거
+                    # 응답 전처리
                     cleaned_response = response.text.strip()
+                    # 응답에서 JSON 부분만 추출
+                    if "```json" in cleaned_response:
+                        cleaned_response = cleaned_response.split("```json")[1].split("```")[0].strip()
+                    elif "```" in cleaned_response:
+                        cleaned_response = cleaned_response.split("```")[1].strip()
+                    
                     messages = json.loads(cleaned_response)
                     
                     st.divider()
