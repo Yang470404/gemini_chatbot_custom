@@ -268,7 +268,7 @@ with tab_praise:
                     st.code(messages['praise'], language=None)
                     
                     # 공감 메시지 섹션
-                    st.subheader("�� 공감 메시지", divider="rainbow")
+                    st.subheader("🤗 공감 메시지", divider="rainbow")
                     st.info(f"🌿 {messages['empathy']}")
                     st.code(messages['empathy'], language=None)
                     
