@@ -197,20 +197,37 @@ with tab_praise:
     > 네가 그랬다니 속상했겠다.
     """)
     
-    # 사용자 입력
-    praise_input = st.text_area(
-        "상대방의 메시지나 상황을 입력하세요",
-        height=100,
-        placeholder="예: 오늘 발표 준비하느라 밤을 새웠어요.",
-        value="오늘 진짜 힘들었어."  # 기본 예시 문장
-    )
+    # 설정 컬럼
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        # 사용자 입력
+        praise_input = st.text_area(
+            "상대방의 메시지나 상황을 입력하세요",
+            height=100,
+            placeholder="예: 오늘 발표 준비하느라 밤을 새웠어요.",
+            value="오늘 진짜 힘들었어."  # 기본 예시 문장
+        )
+    
+    with col2:
+        # 말투 선택
+        honorific = st.radio(
+            "말투 선택",
+            options=["반말", "존댓말"],
+            index=0,
+            help="생성될 메시지의 말투를 선택하세요."
+        )
+    
     generate_button = st.button("✨ 메시지 생성하기", type="primary")
     
     if generate_button and praise_input:
         try:
             with st.spinner("따뜻한 메시지를 생성하고 있습니다..."):
+                # 존댓말 여부에 따른 프롬프트 조정
+                honorific_guide = "존댓말로" if honorific == "존댓말" else "친근한 반말로"
+                
                 prompt = f"""당신은 JSON 응답만 제공하는 메시지 생성 시스템입니다.
-                입력된 메시지에 대한 칭찬과 공감 메시지를 생성하여 정확한 JSON 형식으로만 응답하세요.
+                입력된 메시지에 대한 칭찬과 공감 메시지를 {honorific_guide} 생성하여 정확한 JSON 형식으로만 응답하세요.
 
                 입력 메시지: "{praise_input}"
 
@@ -222,8 +239,9 @@ with tab_praise:
 
                 규칙:
                 1. JSON 형식만 응답하세요
-                2. 자연스러운 대화체로 작성하세요
-                3. 다른 설명이나 텍스트를 포함하지 마세요"""
+                2. {honorific_guide} 작성하세요
+                3. 자연스러운 대화체로 작성하세요
+                4. 다른 설명이나 텍스트를 포함하지 마세요"""
 
                 response = model.generate_content(prompt, generation_config={
                     "temperature": 0.3,
@@ -256,7 +274,8 @@ with tab_praise:
                     
                     # 사용 팁 추가
                     with st.expander("💡 사용 팁"):
-                        st.markdown("""
+                        st.markdown(f"""
+                        - 현재 설정된 말투: **{honorific}**
                         - 각 메시지 박스의 오른쪽 상단에 있는 복사 버튼을 클릭하여 텍스트를 복사할 수 있습니다.
                         - 상황에 맞게 칭찬 또는 공감 메시지를 선택하여 사용하세요.
                         - 필요한 경우 메시지를 약간 수정하여 사용하셔도 좋습니다.
