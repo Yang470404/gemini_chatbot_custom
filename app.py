@@ -206,7 +206,7 @@ with tab_praise:
             "상대방의 메시지나 상황을 입력하세요",
             height=100,
             placeholder="예: 오늘 발표 준비하느라 밤을 새웠어요.",
-            value="오늘 진짜 힘들었어."  # 기본 예시 문장
+            value="나 우울해서 빵샀어."  # 기본 예시 문장
         )
     
     with col2:
@@ -268,7 +268,7 @@ with tab_praise:
                     st.code(messages['praise'], language=None)
                     
                     # 공감 메시지 섹션
-                    st.subheader("💝 공감 메시지", divider="rainbow")
+                    st.subheader("�� 공감 메시지", divider="rainbow")
                     st.info(f"🌿 {messages['empathy']}")
                     st.code(messages['empathy'], language=None)
                     
